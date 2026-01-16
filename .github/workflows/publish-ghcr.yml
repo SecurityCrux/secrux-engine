@@ -1,9 +1,6 @@
 name: Publish engine images to GHCR
 
 on:
-  push:
-    tags:
-      - "*"
   release:
     types: [published]
 
@@ -88,3 +85,21 @@ jobs:
           build-args: ${{ matrix.build_args }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Set package visibility to public
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OWNER: ${{ github.repository_owner }}
+          PACKAGE: ${{ matrix.image }}
+        run: |
+          set -euo pipefail
+
+          package="$(echo "${PACKAGE}" | tr '[:upper:]' '[:lower:]')"
+
+          if gh api -X PATCH "/orgs/${OWNER}/packages/container/${package}/visibility" -f visibility=public >/dev/null 2>&1; then
+            echo "Set org package visibility to public: ${package}"
+            exit 0
+          fi
+
+          gh api -X PATCH "/users/${OWNER}/packages/container/${package}/visibility" -f visibility=public >/dev/null
+          echo "Set user package visibility to public: ${package}"
