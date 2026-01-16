@@ -51,6 +51,8 @@ jobs:
         run: |
           set -euo pipefail
 
+          registry_image="$(echo "${REGISTRY_IMAGE}" | tr '[:upper:]' '[:lower:]')"
+
           if [[ "${{ github.event_name }}" == "release" ]]; then
             tag="${{ github.event.release.tag_name }}"
             prerelease="${{ github.event.release.prerelease }}"
@@ -61,13 +63,13 @@ jobs:
 
           stripped="${tag#v}"
 
-          tags=("${REGISTRY_IMAGE}:${tag}")
+          tags=("${registry_image}:${tag}")
           if [[ "${stripped}" != "${tag}" ]]; then
-            tags+=("${REGISTRY_IMAGE}:${stripped}")
+            tags+=("${registry_image}:${stripped}")
           fi
 
           if [[ "${prerelease}" != "true" && "${tag}" != *"-"* ]]; then
-            tags+=("${REGISTRY_IMAGE}:latest")
+            tags+=("${registry_image}:latest")
           fi
 
           {
